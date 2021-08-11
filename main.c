@@ -34,8 +34,8 @@ void close();
 int menu();
 void add_user();
 void view_users();
-void delete_user();
-void update_user();
+void delete_user(); //TODO
+void update_user(); //TODO
 
 int main()
 {
@@ -103,6 +103,12 @@ int menu() {
     return action;
 }
 
+/*
+    A function to add a new user and save to a file
+    Doesn't return anything
+    Requires no parameters
+*/
+
 void add_user() {
     struct user u;
     FILE *fp;
@@ -124,22 +130,31 @@ void add_user() {
     printf("User successfully added\n");
 }
 
+/*
+    A function to print a list of all users from a file to screen
+    Doesn't return anything
+    Requires no parameters
+*/
+
 void view_users() {
     struct user u;
     FILE *fp;
+
+    // check if file open is successful
     if ((fp = fopen("users","rb"))==NULL) {
         printf("Cannot open file.\n");
         exit(1);
     }
     printf("\n\tLIST OF USERS\n\n");
     int count;
-    for(count = 0;count<65;count++) printf("_");
+    for(count = 0;count<65;count++) printf("_"); // print 65 underscores/underline
     printf("\n");
     printf("|%8s|\t%20s|\t%10s|\t%8s|\n","ID","NAME","PHONE","IS STAFF");
     for(count = 0;count<65;count++) printf("_");
     printf("\n");
-    while(1) {
-        if(feof(fp)) break;
+
+    // read all records from a file until end of file
+    while(!feof(fp)) {
         fread(&u, sizeof(struct user), 1, fp);
         printf("|%8d|\t",u.id);
         printf("%20s|\t",u.name);
@@ -148,6 +163,6 @@ void view_users() {
     }
     for(count = 0;count<65;count++) printf("_");
     printf("\n");
-    fclose(fp);
+    fclose(fp); // close file
 
 }
