@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1627653934 source:c:\users\admin\kimanthi\library-management-system\main.c
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	<string.h>
+	<windows.h>
+	<conio.h>
+
