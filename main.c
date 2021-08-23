@@ -33,7 +33,9 @@ void execute_action(int action);
 void close();
 int menu();
 void add_user();
-void view_users();
+void view_users(); // users table view
+int get_user_id(); // Get id of user to delete
+int user_id_auto_increment();
 void delete_user(); //TODO
 void update_user(); //TODO
 
@@ -51,27 +53,6 @@ int main()
     return 0;
 }
 
-void execute_action(int action) {
-    switch(action) {
-    case 1:
-        add_user();
-        break;
-    case 2:
-        view_users();
-        break;
-    case 3:
-        printf("Adding a book\n");
-        break;
-    case 4:
-        close();
-        break;
-    default:
-        printf("Unknown action. \n");
-
-    }
-
-}
-
 void close() {
     printf("Thank you for using the system\n");
     printf("Bye\n");
@@ -87,20 +68,70 @@ int menu() {
         printf("Welcome Titus\n");
         printf("1. Add user\n");
         printf("2. View users\n");
-        printf("3. Add Book\n");
-        printf("4. Exit\n");
-        printf("Select action(1-4): ");
+        printf("3. Delete user\n");
+        printf("4. Add Book\n");
+        printf("5. Exit\n");
+        printf("Select action(1-5): ");
         scanf("%d",&action);
         // validate input
-        if (action < 1 || action > 4) {
+        if (action < 1 || action > 5) {
             printf("Invalid action. Try again\n");
             Sleep(2000);
             system("cls");
         }
 
-    } while(action < 1 || action > 4);
+    } while(action < 1 || action > 5);
 
     return action;
+}
+
+void execute_action(int action) {
+    switch(action) {
+    case 1:
+        add_user();
+        break;
+    case 2:
+        view_users();
+        break;
+    case 3:
+        delete_user();
+        break;
+    case 4:
+        printf("Adding a book\n");
+        break;
+    case 5:
+        close();
+        break;
+    default:
+        printf("Unknown action. \n");
+
+    }
+
+}
+
+int user_id_auto_increment()
+{
+    struct user u;
+    FILE *fp;
+    int id, max = 1000;
+
+    // check if file open is successful
+    if ((fp = fopen("users","rb"))==NULL) {
+        printf("Cannot open file.\n");
+        exit(1);
+    }
+    printf("\nSelect User to delete:\n");
+
+    // read all records from a file until end of file
+    while(!feof(fp)) {
+        fread(&u, sizeof(struct user), 1, fp);
+        if(u.id > max)
+            max = u.id;
+    }
+    fclose(fp);
+    id = ++max;
+    return id;
+
 }
 
 /*
@@ -112,6 +143,8 @@ int menu() {
 void add_user() {
     struct user u;
     FILE *fp;
+
+    u.id = user_id_auto_increment();
     if ((fp = fopen("users","ab"))==NULL) {
         printf("Cannot open file.\n");
         exit(1);
@@ -119,10 +152,8 @@ void add_user() {
     printf("Name: ");
     getchar();
     gets(u.name);
-    printf("ID number: ");
-    scanf("%d",&u.id);
     printf("Phone Number: ");
-    scanf("%s",&u.tel);
+    gets(u.tel);
     printf("User type(1 for staff, 0 for ordinary user: ");
     scanf("%d",&u.is_staff);
     fwrite(&u, sizeof(struct user), 1, fp);
@@ -165,4 +196,69 @@ void view_users() {
     printf("\n");
     fclose(fp); // close file
 
+}
+
+int get_user_id()
+{
+    struct user u;
+    FILE *fp;
+    int id;
+
+    // check if file open is successful
+    if ((fp = fopen("users","rb"))==NULL) {
+        printf("Cannot open file.\n");
+        exit(1);
+    }
+    printf("\nSelect User to delete:\n");
+
+    // read all records from a file until end of file
+    while(!feof(fp)) {
+        fread(&u, sizeof(struct user), 1, fp);
+        printf("%8d.\t%s\n",u.id,u.name);
+    }
+    fclose(fp); // close file
+    printf("Enter user id: ");
+    scanf("%d",&id);
+
+    return id;
+}
+
+void delete_user()
+{
+    struct user u;
+    FILE *fp,*fp1;
+    int id;
+
+    // check if file open is successful
+    if ((fp = fopen("users","rb"))==NULL) {
+        printf("Cannot open file.\n");
+        exit(1);
+    }
+    // check if file open is successful
+    if ((fp1 = fopen("users_tmp","ab"))==NULL) {
+        printf("Cannot open file.\n");
+        exit(1);
+    }
+
+    id = get_user_id();
+
+    // read all records from a file until end of file
+    while(!feof(fp)) {
+        fread(&u, sizeof(struct user), 1, fp);
+        if(u.id == id) continue;
+        fwrite(&u, sizeof(struct user), 1, fp1);
+    }
+
+    fclose(fp); // close file
+    fclose(fp1);
+
+    if(remove("users") == 0) {
+        if(rename("users_tmp","users") == 0)
+            printf("User Deleted successfully. \n");
+        else
+            printf("Could not rename temporary file\n");
+    }
+    else {
+        printf("Could not delete old file. \n");
+    }
 }
