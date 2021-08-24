@@ -36,7 +36,8 @@ void add_user();
 void view_users(); // users table view
 int get_user_id(); // Get id of user to delete
 int user_id_auto_increment();
-void delete_user(); //TODO
+void delete_user();
+struct user get_updated_user(struct user u);
 void update_user(); //TODO
 
 int main()
@@ -69,18 +70,19 @@ int menu() {
         printf("1. Add user\n");
         printf("2. View users\n");
         printf("3. Delete user\n");
-        printf("4. Add Book\n");
-        printf("5. Exit\n");
-        printf("Select action(1-5): ");
+        printf("4. Update user\n");
+        printf("5. Add Book\n");
+        printf("6. Exit\n");
+        printf("Select action(1-6): ");
         scanf("%d",&action);
         // validate input
-        if (action < 1 || action > 5) {
+        if (action < 1 || action > 6) {
             printf("Invalid action. Try again\n");
             Sleep(2000);
             system("cls");
         }
 
-    } while(action < 1 || action > 5);
+    } while(action < 1 || action > 6);
 
     return action;
 }
@@ -97,13 +99,16 @@ void execute_action(int action) {
         delete_user();
         break;
     case 4:
-        printf("Adding a book\n");
+        update_user();
         break;
     case 5:
+        printf("Adding a book\n");
+        break;
+    case 6:
         close();
         break;
     default:
-        printf("Unknown action. \n");
+        printf("Unrecognized action. \n");
 
     }
 
@@ -170,6 +175,7 @@ void add_user() {
 void view_users() {
     struct user u;
     FILE *fp;
+    int uid=0;
 
     // check if file open is successful
     if ((fp = fopen("users","rb"))==NULL) {
@@ -178,21 +184,26 @@ void view_users() {
     }
     printf("\n\tLIST OF USERS\n\n");
     int count;
-    for(count = 0;count<65;count++) printf("_"); // print 65 underscores/underline
+    for(count = 0;count<66;count++) printf("_"); // print 65 underscores/underline
     printf("\n");
-    printf("|%8s|\t%20s|\t%10s|\t%8s|\n","ID","NAME","PHONE","IS STAFF");
+    printf("|%8s|\t%20s|\t%13s|\t%8s|\n","ID","NAME","PHONE","USER TYPE");
     for(count = 0;count<65;count++) printf("_");
     printf("\n");
 
     // read all records from a file until end of file
     while(!feof(fp)) {
         fread(&u, sizeof(struct user), 1, fp);
+        if(u.id == uid ) continue;
+        uid = u.id;
         printf("|%8d|\t",u.id);
         printf("%20s|\t",u.name);
-        printf("%8s|\t",u.tel);
-        printf("%8d|\n",u.is_staff);
+        printf("%13s|\t",u.tel);
+        if(u.is_staff)
+            printf("Staff    |\n");
+        else
+            printf("Standard |\n");
     }
-    for(count = 0;count<65;count++) printf("_");
+    for(count = 0;count<66;count++) printf("_");
     printf("\n");
     fclose(fp); // close file
 
@@ -202,18 +213,19 @@ int get_user_id()
 {
     struct user u;
     FILE *fp;
-    int id;
+    int id,uid=0;
 
     // check if file open is successful
     if ((fp = fopen("users","rb"))==NULL) {
         printf("Cannot open file.\n");
         exit(1);
     }
-    printf("\nSelect User to delete:\n");
 
     // read all records from a file until end of file
     while(!feof(fp)) {
         fread(&u, sizeof(struct user), 1, fp);
+        if(u.id == uid ) continue;
+        uid = u.id;
         printf("%8d.\t%s\n",u.id,u.name);
     }
     fclose(fp); // close file
@@ -240,6 +252,7 @@ void delete_user()
         exit(1);
     }
 
+    printf("\nSelect User to delete:\n");
     id = get_user_id();
 
     // read all records from a file until end of file
@@ -261,4 +274,97 @@ void delete_user()
     else {
         printf("Could not delete old file. \n");
     }
+}
+
+void update_user()
+{
+    struct user u;
+    FILE *fp,*fp1;
+    int id,uid=0;
+
+    // check if file open is successful
+    if ((fp = fopen("users","rb"))==NULL) {
+        printf("Cannot open file.\n");
+        exit(1);
+    }
+    // check if file open is successful
+    if ((fp1 = fopen("users_tmp","ab"))==NULL) {
+        printf("Cannot open file.\n");
+        exit(1);
+    }
+
+    printf("\nSelect User to Update:\n");
+    id = get_user_id();
+
+    // read all records from a file until end of file
+    while(!feof(fp)) {
+        fread(&u, sizeof(struct user), 1, fp);
+        if(u.id == uid ) continue;
+        uid = u.id;
+        if(u.id == id) u = get_updated_user(u);
+        fwrite(&u, sizeof(struct user), 1, fp1);
+    }
+
+    fclose(fp); // close file
+    fclose(fp1);
+
+    if(remove("users") == 0) {
+        if(rename("users_tmp","users") == 0)
+            printf("User Updated successfully. \n");
+        else
+            printf("Could not rename temporary file\n");
+    }
+    else {
+        printf("Could not delete old file. \n");
+    }
+}
+
+struct user get_updated_user(struct user u)
+{
+    int attr;
+    while(1) {
+            do{
+                printf("Select attribute to edit: \n");
+                printf("1. Name: %s\n",u.name);
+                printf("2. Phone: %s\n",u.tel);
+                printf("3. User type: ");
+                if(u.is_staff)
+                    printf("Staff\n");
+                else
+                    printf("Standard\n");
+
+                printf("4. Done\n");
+                printf("Attribute: ");
+                scanf("%d",&attr);
+                if(attr < 1 || attr > 4) {
+                    printf("Invalid attribute. Try again\n");
+                    Sleep(1000);
+                    system("cls");
+                }
+            } while(attr < 1 || attr > 4);
+            getchar();
+            switch(attr) {
+            case 1:
+                printf("New Name: ");
+                gets(u.name);
+                break;
+            case 2:
+                printf("New Phone no.: ");
+                gets(u.tel);
+                break;
+            case 3:
+                printf("New user status(1 for staff, 0 for standard): ");
+                scanf("%d",&u.is_staff);
+                break;
+            case 4:
+                return u;
+            default:
+                printf("Invalid attribute.\n");
+                break;
+            }
+    }
+
+    return u;
+
+
 }
