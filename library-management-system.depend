@@ -1,9 +1,11 @@
 # depslib dependency file v1.0
-1629725533 source:c:\users\admin\kimanthi\library-management-system\main.c
+1629823146 source:c:\users\admin\kimanthi\library-management-system\main.c
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
 	<string.h>
 	<windows.h>
 	<conio.h>
+	<time.h>
+	<locale.h>
 

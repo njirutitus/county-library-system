@@ -12,6 +12,8 @@
 #include <string.h>
 #include <windows.h>
 #include <conio.h>
+#include <time.h>
+#include <locale.h>
 
 // Adding user:
 // name
@@ -24,6 +26,7 @@ struct user {
     int id;
     char tel[13];
     int is_staff;
+    char added_on[80];
 };
 
 
@@ -32,13 +35,16 @@ struct user {
 void execute_action(int action);
 void close();
 int menu();
+
 void add_user();
 void view_users(); // users table view
 int get_user_id(); // Get id of user to delete
 int user_id_auto_increment();
 void delete_user();
 struct user get_updated_user(struct user u);
-void update_user(); //TODO
+void update_user();
+void search_user();
+char* get_timestamp();
 
 int main()
 {
@@ -71,18 +77,19 @@ int menu() {
         printf("2. View users\n");
         printf("3. Delete user\n");
         printf("4. Update user\n");
-        printf("5. Add Book\n");
-        printf("6. Exit\n");
-        printf("Select action(1-6): ");
+        printf("5. Search user\n");
+        printf("6. Add Book\n");
+        printf("7. Exit\n");
+        printf("Select action(1-7): ");
         scanf("%d",&action);
         // validate input
-        if (action < 1 || action > 6) {
+        if (action < 1 || action > 7) {
             printf("Invalid action. Try again\n");
             Sleep(2000);
             system("cls");
         }
 
-    } while(action < 1 || action > 6);
+    } while(action < 1 || action > 7);
 
     return action;
 }
@@ -93,7 +100,7 @@ void execute_action(int action) {
         add_user();
         break;
     case 2:
-        view_users();
+        view_users("");
         break;
     case 3:
         delete_user();
@@ -102,9 +109,12 @@ void execute_action(int action) {
         update_user();
         break;
     case 5:
-        printf("Adding a book\n");
+        search_user();
         break;
     case 6:
+        printf("Adding a book\n");
+        break;
+    case 7:
         close();
         break;
     default:
@@ -125,7 +135,6 @@ int user_id_auto_increment()
         printf("Cannot open file.\n");
         exit(1);
     }
-    printf("\nSelect User to delete:\n");
 
     // read all records from a file until end of file
     while(!feof(fp)) {
@@ -148,8 +157,11 @@ int user_id_auto_increment()
 void add_user() {
     struct user u;
     FILE *fp;
+    char *p;
 
     u.id = user_id_auto_increment();
+    p = get_timestamp();
+    strcpy(u.added_on,p);
     if ((fp = fopen("users","ab"))==NULL) {
         printf("Cannot open file.\n");
         exit(1);
@@ -172,7 +184,7 @@ void add_user() {
     Requires no parameters
 */
 
-void view_users() {
+void view_users(char term[100]) {
     struct user u;
     FILE *fp;
     int uid=0;
@@ -184,10 +196,10 @@ void view_users() {
     }
     printf("\n\tLIST OF USERS\n\n");
     int count;
-    for(count = 0;count<66;count++) printf("_"); // print 65 underscores/underline
+    for(count = 0;count<93;count++) printf("_"); // print 65 underscores/underline
     printf("\n");
-    printf("|%8s|\t%20s|\t%13s|\t%8s|\n","ID","NAME","PHONE","USER TYPE");
-    for(count = 0;count<65;count++) printf("_");
+    printf("|%8s|\t%20s|\t%13s|\t%8s|\t%20s|\n","ID","NAME","PHONE","USER TYPE","ADDED ON");
+    for(count = 0;count<93;count++) printf("_");
     printf("\n");
 
     // read all records from a file until end of file
@@ -195,15 +207,20 @@ void view_users() {
         fread(&u, sizeof(struct user), 1, fp);
         if(u.id == uid ) continue;
         uid = u.id;
+        char id[30],is[2];
+        itoa(u.id,id,10);
+        itoa(u.is_staff,is,10);
+        if(!(strcmp(id,term) == 0 || strstr(u.name,term) || strstr(u.tel,term) || strcmp(is,term) == 0)) continue;
         printf("|%8d|\t",u.id);
         printf("%20s|\t",u.name);
         printf("%13s|\t",u.tel);
         if(u.is_staff)
-            printf("Staff    |\n");
+            printf("Staff    |\t");
         else
-            printf("Standard |\n");
+            printf("Standard |\t");
+        printf("%20s|\n",u.added_on);
     }
-    for(count = 0;count<66;count++) printf("_");
+    for(count = 0;count<93;count++) printf("_");
     printf("\n");
     fclose(fp); // close file
 
@@ -367,4 +384,27 @@ struct user get_updated_user(struct user u)
     return u;
 
 
+}
+
+void search_user()
+{
+    char term[100];
+    printf("SEARCH USER\n");
+    printf("Value: ");
+    getchar();
+    gets(term);
+    view_users(term);
+}
+
+char* get_timestamp()
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    char *buffer;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    strftime(buffer,80,"%d/%m/%Y %H:%Mh", timeinfo);
+
+    return (buffer);
 }
