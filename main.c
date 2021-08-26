@@ -25,11 +25,15 @@ struct user {
     char name[100];
     int id;
     char tel[13];
+    char email[50];
     int is_staff;
     char added_on[80];
+    char dob[12];
+    char gender[20];
+    char initials[10];
+    char salutation[5];
+    char password[20];
 };
-
-
 
 // Function prototype
 void execute_action(int action);
@@ -44,7 +48,14 @@ void delete_user();
 struct user get_updated_user(struct user u);
 void update_user();
 void search_user();
+
+// Helper functions
 char* get_timestamp();
+char* str_to_lower(char* str);
+char* get_salutation();
+char* get_gender();
+char* get_password();
+char* get_initial_password(char *name);
 
 int main()
 {
@@ -160,8 +171,8 @@ void add_user() {
     char *p;
 
     u.id = user_id_auto_increment();
-    p = get_timestamp();
-    strcpy(u.added_on,p);
+    strcpy(u.added_on,get_timestamp());
+
     if ((fp = fopen("users","ab"))==NULL) {
         printf("Cannot open file.\n");
         exit(1);
@@ -169,13 +180,26 @@ void add_user() {
     printf("Name: ");
     getchar();
     gets(u.name);
+    printf("Initials: ");
+    gets(u.initials);
+    p = get_salutation();
+    strcpy(u.salutation,p);
+    p = get_gender();
+    strcpy(u.gender,p);
     printf("Phone Number: ");
+    getchar();
     gets(u.tel);
+    printf("Email: ");
+    gets(u.email);
     printf("User type(1 for staff, 0 for ordinary user: ");
     scanf("%d",&u.is_staff);
+    p = get_initial_password(u.name);
+    strcpy(u.password,p);
+
     fwrite(&u, sizeof(struct user), 1, fp);
     fclose(fp);
     printf("User successfully added\n");
+    printf("Initial Password (kindly write it down): %s\n",u.password);
 }
 
 /*
@@ -196,10 +220,10 @@ void view_users(char term[100]) {
     }
     printf("\n\tLIST OF USERS\n\n");
     int count;
-    for(count = 0;count<93;count++) printf("_"); // print 65 underscores/underline
+    for(count = 0;count<150;count++) printf("_"); // print 65 underscores/underline
     printf("\n");
-    printf("|%8s|\t%20s|\t%13s|\t%8s|\t%20s|\n","ID","NAME","PHONE","USER TYPE","ADDED ON");
-    for(count = 0;count<93;count++) printf("_");
+    printf("|%8s| %11s| %20s| %6s| %13s| %13s| %30s| %8s| %20s|\n","ID","SALUTATION","NAME","INITIALS","GENDER","PHONE","EMAIL","USER TYPE","ADDED ON");
+    for(count = 0;count<150;count++) printf("_");
     printf("\n");
 
     // read all records from a file until end of file
@@ -210,17 +234,21 @@ void view_users(char term[100]) {
         char id[30],is[2];
         itoa(u.id,id,10);
         itoa(u.is_staff,is,10);
-        if(!(strcmp(id,term) == 0 || strstr(u.name,term) || strstr(u.tel,term) || strcmp(is,term) == 0)) continue;
-        printf("|%8d|\t",u.id);
-        printf("%20s|\t",u.name);
-        printf("%13s|\t",u.tel);
+        if(!(strcmp(id,term) == 0 || strstr(u.salutation,term) || strstr(u.name,term) || strstr(u.initials,term) || strstr(u.tel,term) || strstr(u.email,term) || strcmp(is,term) == 0 || strcmp(u.gender,term) == 0)) continue;
+        printf("|%8d| ",u.id);
+        printf("%11s| ",u.salutation);
+        printf("%20s|   ",u.name);
+        printf("%6s| ",u.initials);
+        printf("%13s| ",u.gender);
+        printf("%13s| ",u.tel);
+        printf("%30s| ",u.email);
         if(u.is_staff)
-            printf("Staff    |\t");
+            printf("Staff    | ");
         else
-            printf("Standard |\t");
+            printf("Standard | ");
         printf("%20s|\n",u.added_on);
     }
-    for(count = 0;count<93;count++) printf("_");
+    for(count = 0;count<150;count++) printf("_");
     printf("\n");
     fclose(fp); // close file
 
@@ -407,4 +435,141 @@ char* get_timestamp()
     strftime(buffer,80,"%d/%m/%Y %H:%Mh", timeinfo);
 
     return (buffer);
+}
+
+char* str_to_lower(char* str) {
+    int size = sizeof(str)/sizeof(char);
+    char *new_str;
+    int i;
+
+    printf("source: %s",str);
+
+    for(i = 0; i < size; i++) {
+        new_str[i] = tolower(str[i]);
+    }
+
+    return new_str;
+}
+
+char* get_salutation() {
+    int choice;
+    char salutation[20];
+    do {
+        printf("Salutation:\n");
+        printf("1. Mr.\n");
+        printf("2. Mrs.\n");
+        printf("3. Miss.\n");
+        printf("4. Ms.\n");
+        printf("Selection: ");
+        scanf("%d",&choice);
+        switch(choice) {
+        case 1:
+            strcpy(salutation,"mr");
+            break;
+        case 2:
+            strcpy(salutation,"mrs");
+            break;
+        case 3:
+            strcpy(salutation,"miss");
+            break;
+        case 4:
+            strcpy(salutation,"ms");
+            break;
+        default:
+            printf("Invalid choice. Try again.\n");
+        }
+    }while(choice < 1 || choice > 4);
+
+    return salutation;
+
+}
+char* get_gender(){
+    int choice;
+    char gender[20];
+    do {
+        printf("Gender:\n");
+        printf("1. Male.\n");
+        printf("2. Female.\n");
+        printf("3. Other.\n");
+        printf("4. Don't want to say.\n");
+        printf("Selection: ");
+        scanf("%d",&choice);
+        switch(choice) {
+        case 1:
+            strcpy(gender,"male");
+            break;
+        case 2:
+            strcpy(gender,"female");
+            break;
+        case 3:
+            strcpy(gender,"other");
+            break;
+        case 4:
+            strcpy(gender,"not specified");
+            break;
+        default:
+            printf("Invalid choice. Try again.\n");
+        }
+    }while(choice < 1 || choice > 4);
+
+    return gender;
+}
+
+char* get_password()
+{
+    char pass[30],confirm_pass[30];
+    char ch;
+    int i = 0;
+
+    do {
+        printf("Enter password: ");
+        while(1) {
+            ch = getch();
+            if(ch == '\r') break;
+            if(ch == 32) continue;
+            pass[i] = ch;
+            printf("*");
+            i++;
+        }
+
+        i = 0;
+        printf("\nConfirm password: ");
+        while(i < 30) {
+            ch = getch();
+            if(ch == '\r') break;
+            if(ch == 32) continue;
+            confirm_pass[i] = ch;
+            printf("*");
+            i++;
+        }
+
+        if(strcmp(pass,confirm_pass)) {
+            printf("\nPasswords Do not match.\n");
+            printf("Enter c to try again or x to exit. \n");
+            ch = getch();
+            system("cls");
+            if(ch == 'x') break;
+        }
+        else {
+            printf("\nPassword set Successfully");
+        }
+    } while(strcmp(pass,confirm_pass));
+
+    return pass;
+
+}
+
+char* get_initial_password(char *name)
+{
+    char pass[30];
+    int size = strlen(name);
+    int i;
+    for(i = 0; i < size ; i++) {
+        if(name[size - i - 1] == 32) {
+            pass[i] = tolower(name[size - i - 2]);
+            break;
+        }
+        pass[i] = tolower(name[size - i - 1]);
+    }
+    return pass;
 }
