@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1630011740 source:c:\users\admin\kimanthi\library-management-system\main.c
+1630020121 source:c:\users\admin\kimanthi\library-management-system\main.c
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
