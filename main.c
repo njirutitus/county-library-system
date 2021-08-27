@@ -51,10 +51,12 @@ void search_user();
 
 // Helper functions
 char* get_timestamp();
-char* str_to_lower(char* str);
+void str_to_lower(char* str);
+void str_to_upper(char* str);
+void str_capitalize(char* str);
 char* get_salutation();
 char* get_gender();
-char* get_password();
+char* set_password();
 char* get_initial_password(char *name);
 
 int main()
@@ -213,6 +215,8 @@ void view_users(char term[100]) {
     FILE *fp;
     int uid=0;
 
+    str_to_lower(term);
+
     // check if file open is successful
     if ((fp = fopen("users","rb"))==NULL) {
         printf("Cannot open file.\n");
@@ -234,7 +238,16 @@ void view_users(char term[100]) {
         char id[30],is[2];
         itoa(u.id,id,10);
         itoa(u.is_staff,is,10);
+        str_to_lower(u.name);
+        str_to_lower(u.initials);
+        str_to_lower(u.email);
         if(!(strcmp(id,term) == 0 || strstr(u.salutation,term) || strstr(u.name,term) || strstr(u.initials,term) || strstr(u.tel,term) || strstr(u.email,term) || strcmp(is,term) == 0 || strcmp(u.gender,term) == 0)) continue;
+
+        str_capitalize(u.salutation);
+        str_capitalize(u.name);
+        str_to_upper(u.initials);
+        str_capitalize(u.gender);
+
         printf("|%8d| ",u.id);
         printf("%11s| ",u.salutation);
         printf("%20s|   ",u.name);
@@ -367,41 +380,71 @@ void update_user()
 struct user get_updated_user(struct user u)
 {
     int attr;
+    char *p;
     while(1) {
             do{
                 printf("Select attribute to edit: \n");
-                printf("1. Name: %s\n",u.name);
-                printf("2. Phone: %s\n",u.tel);
-                printf("3. User type: ");
+                printf("1. Salutation: %s\n",u.salutation);
+                printf("2. Name: %s\n",u.name);
+                printf("3. Initials: %s\n",u.initials);
+                printf("4. Gender: %s\n",u.gender);
+                printf("5. Phone: %s\n",u.tel);
+                printf("6. Email: %s\n",u.email);
+                printf("7. User type: ");
                 if(u.is_staff)
                     printf("Staff\n");
                 else
                     printf("Standard\n");
 
-                printf("4. Done\n");
+                printf("8. Reset Password\n");
+                printf("9. Done\n");
                 printf("Attribute: ");
                 scanf("%d",&attr);
-                if(attr < 1 || attr > 4) {
+                if(attr < 1 || attr > 9) {
                     printf("Invalid attribute. Try again\n");
                     Sleep(1000);
                     system("cls");
                 }
-            } while(attr < 1 || attr > 4);
+            } while(attr < 1 || attr > 9);
             getchar();
             switch(attr) {
             case 1:
+                printf("New Salutation\n");
+                p = get_salutation();
+                strcpy(u.salutation,p);
+                break;
+            case 2:
                 printf("New Name: ");
                 gets(u.name);
                 break;
-            case 2:
+            case 3:
+                printf("New Initials: ");
+                gets(u.initials);
+                break;
+            case 4:
+                printf("New Gender\n");
+                p = get_salutation();
+                strcpy(u.gender,p);
+                break;
+            case 5:
                 printf("New Phone no.: ");
                 gets(u.tel);
                 break;
-            case 3:
+            case 6:
+                printf("New Email: ");
+                gets(u.email);
+                break;
+            case 7:
                 printf("New user status(1 for staff, 0 for standard): ");
                 scanf("%d",&u.is_staff);
                 break;
-            case 4:
+            case 8:
+                p = get_initial_password(u.name);
+                strcpy(u.password,p);
+                printf("Password reset successful \n");
+                printf("New Password(kindly write down): %s\n",u.password);
+                break;
+            case 9:
                 return u;
             default:
                 printf("Invalid attribute.\n");
@@ -437,18 +480,40 @@ char* get_timestamp()
     return (buffer);
 }
 
-char* str_to_lower(char* str) {
-    int size = sizeof(str)/sizeof(char);
-    char *new_str;
+void str_to_lower(char* str) {
+    int size = strlen(str);
     int i;
 
-    printf("source: %s",str);
+    for(i = 0; i < size; i++) {
+        str[i] = tolower(str[i]);
+    }
+}
+
+void str_to_upper(char* str) {
+    int size = strlen(str);
+    int i;
 
     for(i = 0; i < size; i++) {
-        new_str[i] = tolower(str[i]);
+        str[i] = toupper(str[i]);
     }
+}
 
-    return new_str;
+void str_capitalize(char* str) {
+    int size = strlen(str);;
+    int i;
+
+    for(i = 0; i < size; i++) {
+        if(i == 0) {
+            str[i] = toupper(str[i]);
+            continue;
+        }
+        if(str[i-1] == 32 ) {
+            str[i] = toupper(str[i]);
+            continue;
+        }
+
+        str[i] = tolower(str[i]);
+    }
 }
 
 char* get_salutation() {
@@ -515,7 +580,7 @@ char* get_gender(){
     return gender;
 }
 
-char* get_password()
+char* set_password()
 {
     char pass[30],confirm_pass[30];
     char ch;
