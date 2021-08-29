@@ -37,7 +37,8 @@ void execute_action(int action);
 void close();
 int menu();
 
-void add_user();
+void add_user(struct user u);
+struct user get_new_user();
 void view_users(); // users table view
 int get_user_id(); // Get id of user to delete
 int user_id_auto_increment();
@@ -49,6 +50,7 @@ char* get_password(int id);
 void login_user();
 void set_logged_in_user(struct user u);
 struct user fetch_user(int id);
+void change_password();
 void logout();
 int is_password_set();
 
@@ -62,6 +64,7 @@ char* get_gender();
 char* set_password();
 int is_password_set();
 char* get_initial_password(char *name);
+char* read_password();
 
 int main()
 {
@@ -82,6 +85,7 @@ int main()
 
 void close() {
     printf("Thank you for using the system\n");
+    printf("Created By Titus Njiru(titusnjiru.dev)\n");
     printf("Bye\n");
     Sleep(2000);
     exit(0);
@@ -101,7 +105,7 @@ int menu() {
         printf("3. Delete user\n");
         printf("4. Update user\n");
         printf("5. Search user\n");
-        printf("6. Add Book\n");
+        printf("6. Change Password\n");
         printf("7. Log out\n");
         printf("8. Exit\n");
         printf("Select action(1-8): ");
@@ -121,7 +125,7 @@ int menu() {
 void execute_action(int action) {
     switch(action) {
     case 1:
-        add_user();
+        add_user(get_new_user());
         break;
     case 2:
         view_users("");
@@ -136,7 +140,7 @@ void execute_action(int action) {
         search_user();
         break;
     case 6:
-        printf("Adding a book\n");
+        change_password();
         break;
     case 7:
         logout();
@@ -181,8 +185,7 @@ int user_id_auto_increment()
     Requires no parameters
 */
 
-void add_user() {
-    struct user u;
+void add_user(struct user u) {
     FILE *fp;
     char *p;
 
@@ -193,6 +196,20 @@ void add_user() {
         printf("Cannot open file.\n");
         exit(1);
     }
+    p = get_initial_password(u.name);
+    strcpy(u.password,p);
+
+    fwrite(&u, sizeof(struct user), 1, fp);
+    fclose(fp);
+    printf("User successfully added\n");
+    printf("Initial Password (kindly write it down): %s\n",u.password);
+}
+
+struct user get_new_user()
+{
+    struct user u;
+    char *p;
+
     printf("Name: ");
     getchar();
     gets(u.name);
@@ -209,13 +226,9 @@ void add_user() {
     gets(u.email);
     printf("User type(1 for staff, 0 for ordinary user: ");
     scanf("%d",&u.is_staff);
-    p = get_initial_password(u.name);
-    strcpy(u.password,p);
 
-    fwrite(&u, sizeof(struct user), 1, fp);
-    fclose(fp);
-    printf("User successfully added\n");
-    printf("Initial Password (kindly write it down): %s\n",u.password);
+    return u;
+
 }
 
 /*
@@ -381,7 +394,7 @@ void update_user(struct user new_user)
 
     if(remove("users") == 0) {
         if(rename("users_tmp","users") == 0)
-            printf("User Updated successfully. \n");
+            printf("Update successful. \n");
         else
             printf("Could not rename temporary file\n");
     }
@@ -604,36 +617,23 @@ char* set_password()
     int i = 0;
 
     do {
-        printf("Enter password: ");
-        while(1) {
-            ch = getch();
-            if(ch == '\r') break;
-            if(ch == 32) continue;
-            pass[i] = ch;
-            printf("*");
-            i++;
-        }
-
-        i = 0;
+        printf("\nEnter new password: ");
+        strcpy(pass,read_password());
         printf("\nConfirm password: ");
-        while(i < 30) {
-            ch = getch();
-            if(ch == '\r') break;
-            if(ch == 32) continue;
-            confirm_pass[i] = ch;
-            printf("*");
-            i++;
-        }
+        strcpy(confirm_pass,read_password());
 
         if(strcmp(pass,confirm_pass)) {
             printf("\nPasswords Do not match.\n");
             printf("Enter c to try again or x to exit. \n");
             ch = getch();
             system("cls");
-            if(ch == 'x') break;
+            if(ch == 'x') {
+                printf("\nOperation Canceled\n");
+                break;
+            }
         }
         else {
-            printf("\nPassword set Successfully");
+            printf("\nPassword set Successfully\n");
         }
     } while(strcmp(pass,confirm_pass));
 
@@ -711,7 +711,7 @@ void login_user()
     int id,i;
     system("cls");
     printf("\n\tCounty Library Management System!\n");
-    printf("U must login to continue. Enter c to login or x to exit. \n");
+    printf("U must be logged in to continue. Press x to exit or any other key to continue. \n");
     ch = getch();
     system("cls");
     if(ch == 'x') close();
@@ -721,7 +721,7 @@ void login_user()
         scanf("%d",&id);
         strcpy(pass,get_password(id));
         if(!strcmp(pass,"")) {
-            printf("User with that Membership ID does not exist. \nEnter c to try again or x to exit. \n ");
+            printf("User with that Membership ID does not exist. \nPress x to exit or any other key to continue. \n ");
             ch = getch();
             system("cls");
             if(ch == 'x') close();
@@ -731,18 +731,9 @@ void login_user()
             i = 0;
             system("cls");
             printf("Enter password: ");
-            while(1) {
-                ch = getch();
-                if(ch == '\r') break;
-                if(!isgraph(ch) || iscntrl(ch)) continue;
-                password[i] = ch;
-                printf("%c",ch);
-                i++;
-            }
-            password[strlen(password)-1] = '\0';
+            strcpy(password,read_password());
             if(strcmp(pass,password)) {
                 printf("\nIncorrect Password.\n");
-                printf("%s",pass);
                 printf("Enter c to try again or x to exit. \n");
                 ch = getch();
                 system("cls");
@@ -751,11 +742,6 @@ void login_user()
             else {
                 IS_LOGGED_IN = 1;
                 set_logged_in_user(fetch_user(id));
-                if(is_password_set()) {
-                    struct user us = fetch_user(id);
-                    strcpy(us.password,set_password());
-                    update_user(us);
-                }
                 printf("\nLogin Successful.\n");
                 printf("Press any key to continue");
                 getch();
@@ -771,6 +757,36 @@ int is_password_set() {
     return strcmp(LOGGED_IN_USER.password,get_initial_password(LOGGED_IN_USER.name));
 }
 
+void change_password() {
+    char old_pass[30],new_pass[30];
+    printf("Enter old password: ");
+    strcpy(old_pass,read_password());
+    if(strcmp(old_pass,LOGGED_IN_USER.password) == 0) {
+        strcpy(new_pass,set_password());
+        strcpy(LOGGED_IN_USER.password,new_pass);
+        update_user(LOGGED_IN_USER);
+    }
+    else {
+        printf("\nIncorrect Old Password\n");
+    }
+
+}
+
 void logout() {
     IS_LOGGED_IN = 0;
+    printf("\n You have been logged out. \n");
+}
+
+char* read_password()
+{
+    char password[30],ch;
+    int i = 0;
+    while(1) {
+            ch = getch();
+            if(ch == '\r') break;
+            if(!isgraph(ch) || iscntrl(ch)) continue;
+            password[i] = ch;
+            i++;
+    }
+    return password;
 }
