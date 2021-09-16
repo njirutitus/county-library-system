@@ -14,6 +14,7 @@
 #include <conio.h>
 #include <time.h>
 #include <locale.h>
+#include <signal.h>
 
 struct user {
     char name[100];
@@ -36,6 +37,7 @@ struct user LOGGED_IN_USER;
 void execute_action(int action);
 void close();
 int menu();
+void  INThandler(int sig);
 
 void add_user(struct user u);
 struct user get_new_user();
@@ -54,21 +56,39 @@ void change_password();
 void logout();
 int is_password_set();
 
+// setters
+char* set_name();
+char* set_initials();
+char* set_salutation();
+char* set_gender();
+char* set_email();
+char* set_tel();
+int set_is_staff();
+
+// getters
+char* get_name(char *name);
+char* get_initials(char *initials);
+char* get_salutation(char *salutation);
+char* get_gender(char *gender);
+char* get_email(char *email);
+char* get_tel(char *tel);
+char* get_is_staff(int is_staff);
+
 // Helper functions
 char* get_timestamp();
 void str_to_lower(char* str);
 void str_to_upper(char* str);
 void str_capitalize(char* str);
-char* get_salutation();
-char* get_gender();
 char* set_password();
 int is_password_set();
 char* get_initial_password(char *name);
 char* read_password();
+char *trimwhitespace(char *str);
 
 int main()
 {
     int action;
+    signal(SIGINT, INThandler);
     while(1) {
         if(!IS_LOGGED_IN) {
             login_user();
@@ -125,7 +145,9 @@ int menu() {
 void execute_action(int action) {
     switch(action) {
     case 1:
-        add_user(get_new_user());
+        if(LOGGED_IN_USER.is_staff)
+            add_user(get_new_user());
+        else printf("Permission Denied\n");
         break;
     case 2:
         view_users("");
@@ -179,11 +201,147 @@ int user_id_auto_increment()
 
 }
 
-/*
-    A function to add a new user and save to a file
-    Doesn't return anything
-    Requires no parameters
-*/
+char* set_name() {
+    char name[100];
+    //int sig;
+    //if(raise(SIGINT)) return;
+    do {
+        gets(name);
+        strcpy(name,trimwhitespace(name));
+        if(strcmp(name,"") == 0) {
+                printf("Name cannot be blank. Try again\n");
+        }
+    }while(strcmp(name,"") == 0);
+
+    str_to_lower(name);
+
+    return name;
+}
+
+char* set_initials() {
+    char initials[100];
+    do {
+        gets(initials);
+        strcpy(initials,trimwhitespace(initials));
+        if(strcmp(initials,"") == 0) printf("Initials cannot be blank. Try again\n");
+    }while(strcmp(initials,"") == 0);
+
+    str_to_lower(initials);
+
+    return initials;
+}
+
+char* set_email()
+{
+    char email[50];
+    do {
+        gets(email);
+        strcpy(email,trimwhitespace(email));
+        if(strcmp(email,"") == 0) printf("Email cannot be blank. Try again\n");
+    }while(strcmp(email,"") == 0);
+
+    str_to_lower(email);
+
+    return email;
+}
+
+int set_is_staff()
+{
+    int is_staff;
+    do {
+        printf("0. Standard user.\n");
+        printf("1. Staff.\n");
+        printf("2. Super Admin.\n");
+        printf("Selection(0-2): ");
+        scanf("%d",&is_staff);
+        if(is_staff < 0 || is_staff > 2)
+            printf("Invalid selection. Try again. \n");
+
+    }while(is_staff < 0 || is_staff > 2);
+
+    return is_staff;
+}
+
+char* set_tel()
+{
+    char tel[30],ch;
+    int j,valid = 1;
+    do {
+        gets(tel);
+        valid = 1;
+        if(strlen(tel)>13) {
+            printf("Phone number can only contain up to 13 digits. Try again\n");
+            valid = 0;
+        }
+        for(j=0;j<strlen(tel);j++){
+            if(!isdigit(tel[j])) {
+                valid = 0;
+                printf("Phone number can only contain digits. Try again\n");
+                break;
+            }
+        }
+    } while(!valid);
+    return tel;
+
+}
+
+// Getters
+char* get_name(char *name)
+{
+    str_capitalize(name);
+    return name;
+}
+
+char* get_initials(char *initials)
+{
+    str_to_upper(initials);
+    return initials;
+}
+
+char* get_salutation(char *salutation)
+{
+    str_capitalize(salutation);
+    return salutation;
+}
+
+char* get_gender(char *gender)
+{
+    str_capitalize(gender);
+    return gender;
+}
+
+char* get_email(char *email)
+{
+    str_to_lower(email);
+    return email;
+}
+
+char* get_tel(char *tel)
+{
+    return tel;
+}
+
+char* get_is_staff(int is_staff)
+{
+    char staff[12];
+    switch(is_staff) {
+        case 0:
+            strcpy(staff, "Standard");
+            break;
+        case 1:
+            strcpy(staff, "Staff");
+            break;
+        case 2:
+            strcpy(staff, "Admin");
+            break;
+        default:
+            strcpy(staff, "Undefined");
+            break;
+    }
+
+    return staff;
+
+}
 
 void add_user(struct user u) {
     FILE *fp;
@@ -212,20 +370,20 @@ struct user get_new_user()
 
     printf("Name: ");
     getchar();
-    gets(u.name);
+    strcpy(u.name,set_name());
     printf("Initials: ");
-    gets(u.initials);
-    p = get_salutation();
+    strcpy(u.initials,set_initials());
+    p = set_salutation();
     strcpy(u.salutation,p);
-    p = get_gender();
+    p = set_gender();
     strcpy(u.gender,p);
     printf("Phone Number: ");
     getchar();
-    gets(u.tel);
+    strcpy(u.tel,set_tel());
     printf("Email: ");
-    gets(u.email);
-    printf("User type(1 for staff, 0 for ordinary user: ");
-    scanf("%d",&u.is_staff);
+    strcpy(u.email,set_email());
+    printf("User type: \n");
+    u.is_staff = set_is_staff();
 
     return u;
 
@@ -241,6 +399,7 @@ void view_users(char term[100]) {
     struct user u;
     FILE *fp;
     int uid=0;
+    char staff[12];
 
     str_to_lower(term);
 
@@ -251,10 +410,10 @@ void view_users(char term[100]) {
     }
     printf("\n\tLIST OF USERS\n\n");
     int count;
-    for(count = 0;count<150;count++) printf("_"); // print 65 underscores/underline
+    for(count = 0;count<153;count++) printf("_"); // print 65 underscores/underline
     printf("\n");
-    printf("|%8s| %11s| %20s| %6s| %13s| %13s| %30s| %8s| %20s|\n","ID","SALUTATION","NAME","INITIALS","GENDER","PHONE","EMAIL","USER TYPE","ADDED ON");
-    for(count = 0;count<150;count++) printf("_");
+    printf("|%8s| %11s| %20s| %6s| %13s| %13s| %30s| %12s| %20s|\n","ID","SALUTATION","NAME","INITIALS","GENDER","PHONE","EMAIL","USER TYPE","ADDED ON");
+    for(count = 0;count<153;count++) printf("_");
     printf("\n");
 
     // read all records from a file until end of file
@@ -268,27 +427,23 @@ void view_users(char term[100]) {
         str_to_lower(u.name);
         str_to_lower(u.initials);
         str_to_lower(u.email);
-        if(!(strcmp(id,term) == 0 || strstr(u.salutation,term) || strstr(u.name,term) || strstr(u.initials,term) || strstr(u.tel,term) || strstr(u.email,term) || strcmp(is,term) == 0 || strcmp(u.gender,term) == 0)) continue;
-
-        str_capitalize(u.salutation);
-        str_capitalize(u.name);
-        str_to_upper(u.initials);
-        str_capitalize(u.gender);
+        strcpy(staff,get_is_staff(u.is_staff));
+        str_to_lower(staff);
+        if(!(strcmp(id,term) == 0 || strstr(staff,term)|| strstr(u.salutation,term) || strstr(u.name,term) || strstr(u.initials,term) || strstr(u.tel,term) || strstr(u.email,term) || strcmp(is,term) == 0 || strcmp(u.gender,term) == 0)) continue;
 
         printf("|%8d| ",u.id);
-        printf("%11s| ",u.salutation);
-        printf("%20s|   ",u.name);
-        printf("%6s| ",u.initials);
-        printf("%13s| ",u.gender);
-        printf("%13s| ",u.tel);
-        printf("%30s| ",u.email);
-        if(u.is_staff)
-            printf("Staff    | ");
-        else
-            printf("Standard | ");
+        //printf("%11s| ",u.salutation);
+        printf("%11s| ",get_salutation(u.salutation));
+        printf("%20s|   ",get_name(u.name));
+        printf("%6s| ",get_initials(u.initials));
+        printf("%13s| ",get_gender(u.gender));
+        printf("%13s| ",get_tel(u.tel));
+        printf("%30s| ",get_email(u.email));
+        strcpy(staff,get_is_staff(u.is_staff));
+        printf("%12s| ",staff);
         printf("%20s|\n",u.added_on);
     }
-    for(count = 0;count<150;count++) printf("_");
+    for(count = 0;count<153;count++) printf("_");
     printf("\n");
     fclose(fp); // close file
 
@@ -414,18 +569,15 @@ struct user get_updated_user()
     while(1) {
             do{
                 printf("Select attribute to edit: \n");
-                printf("1. Salutation: %s\n",u.salutation);
-                printf("2. Name: %s\n",u.name);
-                printf("3. Initials: %s\n",u.initials);
-                printf("4. Gender: %s\n",u.gender);
-                printf("5. Phone: %s\n",u.tel);
-                printf("6. Email: %s\n",u.email);
-                printf("7. User type: ");
-                if(u.is_staff)
-                    printf("Staff\n");
-                else
-                    printf("Standard\n");
-
+                printf("1. Salutation: %s\n",get_salutation(u.salutation));
+                printf("2. Name: %s\n",get_name(u.name));
+                printf("3. Initials: %s\n",get_initials(u.initials));
+                printf("4. Gender: %s\n",get_gender(u.gender));
+                printf("5. Phone: %s\n",get_tel(u.tel));
+                printf("6. Email: %s\n",get_email(u.email));
+                char staff[12];
+                strcpy(staff,get_is_staff(u.is_staff));
+                printf("7. User type: %s\n",staff);
                 printf("8. Reset Password\n");
                 printf("9. Done\n");
                 printf("Attribute: ");
@@ -440,12 +592,12 @@ struct user get_updated_user()
             switch(attr) {
             case 1:
                 printf("New Salutation\n");
-                p = get_salutation();
+                p = set_salutation();
                 strcpy(u.salutation,p);
                 break;
             case 2:
                 printf("New Name: ");
-                gets(u.name);
+                strcpy(u.name,set_name());
                 break;
             case 3:
                 printf("New Initials: ");
@@ -453,20 +605,20 @@ struct user get_updated_user()
                 break;
             case 4:
                 printf("New Gender\n");
-                p = get_salutation();
+                p = set_gender();
                 strcpy(u.gender,p);
                 break;
             case 5:
                 printf("New Phone no.: ");
-                gets(u.tel);
+                strcpy(u.tel,set_tel());
                 break;
             case 6:
                 printf("New Email: ");
-                gets(u.email);
+                strcpy(u.email,set_email());
                 break;
             case 7:
-                printf("New user status(1 for staff, 0 for standard): ");
-                scanf("%d",&u.is_staff);
+                printf("New user status: \n");
+                u.is_staff = set_is_staff();
                 break;
             case 8:
                 p = get_initial_password(u.name);
@@ -546,7 +698,7 @@ void str_capitalize(char* str) {
     }
 }
 
-char* get_salutation() {
+char* set_salutation() {
     int choice;
     char salutation[20];
     do {
@@ -578,7 +730,7 @@ char* get_salutation() {
     return salutation;
 
 }
-char* get_gender(){
+char* set_gender(){
     int choice;
     char gender[20];
     do {
@@ -786,7 +938,43 @@ char* read_password()
             if(ch == '\r') break;
             if(!isgraph(ch) || iscntrl(ch)) continue;
             password[i] = ch;
+            printf("*");
             i++;
     }
     return password;
+}
+
+char *trimwhitespace(char *str)
+{
+  char *end;
+
+  // Trim leading space
+  while(isspace((unsigned char)*str)) str++;
+
+  if(*str == 0)  // All spaces?
+    return str;
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while(end > str && isspace((unsigned char)*end)) end--;
+
+  // Write new null terminator character
+  end[1] = '\0';
+
+  return str;
+}
+
+void  INThandler(int sig)
+{
+     char  c;
+
+     signal(sig, SIG_IGN);
+     printf("\nOUCH, did you hit Ctrl-C?\n"
+            "Do you really want to Cancel the operation? [y/n] ");
+     c = getchar();
+     if (c == 'y' || c == 'Y')
+          main();
+     else
+          signal(SIGINT, INThandler);
+     getchar(); // Get new line character
 }
