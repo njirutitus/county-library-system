@@ -1,5 +1,8 @@
 # depslib dependency file v1.0
-1630177040 source:c:\users\admin\kimanthi\library-management-system\main.c
+1631817675 source:c:\users\admin\kimanthi\library-management-system\main.c
+	"header.h"
+
+1631817617 c:\users\admin\kimanthi\library-management-system\header.h
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
@@ -8,4 +11,8 @@
 	<conio.h>
 	<time.h>
 	<locale.h>
+	<signal.h>
+
+1631818950 source:c:\users\admin\kimanthi\library-management-system\catalogue.c
+	"header.h"
 
