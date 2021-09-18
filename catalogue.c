@@ -342,7 +342,7 @@ void add_item(struct catalogue u)
     FILE *fp;
     char *p;
 
-    u.id = catalogue_id_auto_increment();
+    u.id = item_id_auto_increment();
     strcpy(u.added_on,get_timestamp());
 
     if ((fp = fopen("catalogue","ab"))==NULL) {
@@ -353,6 +353,29 @@ void add_item(struct catalogue u)
     fwrite(&u, sizeof(struct user), 1, fp);
     fclose(fp);
     printf("Item successfully added\n");
+}
+
+struct catalogue get_new_item()
+{
+    struct catalogue c;
+
+    strcpy(c.type,set_type());
+    printf("ISBN: ");
+    strcpy(c.ISBN,set_ISBN());
+    printf("ISSN: ");
+    strcpy(c.ISSN,set_ISSN());
+    printf("Title: ");
+    strcpy(c.title,set_title());
+    printf("Author: ");
+    strcpy(c.author,set_author());
+    printf("Sub heading: ");
+    strcpy(c.sub_heading,set_subheading());
+    printf("Keywords: ");
+    strcpy(c.keyword,set_keyword());
+    printf("Call Number: ");
+    strcpy(c.call_number,set_call_number());
+
+    return c;
 }
 
 void view_items()
