@@ -32,6 +32,7 @@ struct user {
 
 int IS_LOGGED_IN;
 struct user LOGGED_IN_USER;
+struct user *all_users;
 
 // main objects
 
@@ -65,6 +66,8 @@ struct user fetch_user(int id);
 void change_password();
 void logout();
 int is_password_set();
+int get_no_of_users();
+int create_first_user();
 
 // setters
 char* set_name();

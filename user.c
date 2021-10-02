@@ -401,6 +401,20 @@ void add_user(struct user u) {
     fclose(fp);
     printf("User successfully added\n");
     printf("Initial Password (kindly write it down): %s\n",u.password);
+    printf("Membership ID: %d\n",u.id);
+}
+
+int create_first_user() {
+    char choice;
+    printf("No users available. Would u like to create one? (Y/n): ");
+    choice = getchar();
+    if(choice == 'N' || choice == 'n') {
+        return 0;
+    }
+    else {
+        add_user(get_new_user());
+    }
+    return 1;
 }
 
 struct user get_new_user()
@@ -460,6 +474,7 @@ void view_users(char term[100]) {
     while(!feof(fp)) {
         fread(&u, sizeof(struct user), 1, fp);
         if(u.id == uid ) continue;
+
         uid = u.id;
         char id[30],is[2];
         itoa(u.id,id,10);
@@ -487,6 +502,31 @@ void view_users(char term[100]) {
     printf("\n");
     fclose(fp); // close file
 
+}
+
+int get_no_of_users() {
+    struct user u;
+    FILE *fp;
+    int uid=0,count=0;
+
+    // check if file open is successful
+    if ((fp = fopen("users","rb"))==NULL) {
+        if ((fp = fopen("users","wb"))==NULL) {
+            printf("Cannot open file.\n");
+            exit(1);
+        }
+        fclose(fp);
+        return 0;
+    }
+
+    while(!feof(fp)) {
+        fread(&u, sizeof(struct user), 1, fp);
+        if(u.id == uid ) continue;
+        count++;
+    }
+    fclose(fp); // close file
+
+    return count;
 }
 
 int get_user_id()
@@ -725,6 +765,11 @@ void login_user()
     ch = getch();
     system("cls");
     if(ch == 'x') close();
+    if(get_no_of_users() == 0 ) {
+     if(!create_first_user()) {
+        main();
+     }
+    }
     while(1) {
         printf("Log in to continue.\n");
         printf("Membership ID: ");
