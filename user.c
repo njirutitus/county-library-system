@@ -117,6 +117,7 @@ char* set_name() {
         strcpy(name,trimwhitespace(name));
         if(strcmp(name,"") == 0) {
                 printf("Name cannot be blank. Try again\n");
+                if(getch() == 27) menu();
         }
     }while(strcmp(name,"") == 0);
 
