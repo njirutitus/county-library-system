@@ -258,15 +258,19 @@ char* set_password()
 char* get_initial_password(char *name)
 {
     char pass[30];
+    trimwhitespace(name);
     int size = strlen(name);
-    int i;
+    int i,j=0;
     for(i = 0; i < size ; i++) {
-        if(name[size - i - 1] == 32) {
-            pass[i] = tolower(name[size - i - 2]);
+        if(isspace(name[size - i - 1])) {
+            pass[j] = tolower(name[size - i - 2]);
             break;
         }
-        pass[i] = tolower(name[size - i - 1]);
+        if(!isgraph(name[size - i - 1])) continue;
+        pass[j] = tolower(name[size - i - 1]);
+        j++;
     }
+    pass[j] = '\0';
     return pass;
 }
 
