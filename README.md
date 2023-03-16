@@ -1,6 +1,6 @@
 # county-library-system
 
-This a CLI based Library Management System created for learning purposes.
+This a CLI based Library Management System.
 
 ## Modules
 
