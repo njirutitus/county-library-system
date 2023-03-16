@@ -1,6 +1,6 @@
 /*-----------------------------
 * Version: C99                *
-* Project: Library management *
+* Project: Library Management *
 * Author:  Lewis Njenga       *
 * Date:    Aug, 2022          *
 * License: MIT                *
@@ -34,7 +34,7 @@ int IS_LOGGED_IN;
 struct user LOGGED_IN_USER;
 struct user *all_users;
 
-// main objects
+// Main objects
 
 void users();
 void catalogue();
@@ -49,7 +49,7 @@ int user_menu();
 int catalogue_menu();
 void  INThandler(int sig);
 
-// user object functions
+// User object functions
 void add_user(struct user u);
 struct user get_new_user();
 void view_users(); // users table view
@@ -69,7 +69,7 @@ int is_password_set();
 int get_no_of_users();
 int create_first_user();
 
-// setters
+// Setters
 char* set_name();
 char* set_initials();
 char* set_salutation();
@@ -78,7 +78,7 @@ char* set_email();
 char* set_tel();
 int set_is_staff();
 
-// getters
+// Getters
 char* get_name(char *name);
 char* get_initials(char *initials);
 char* get_salutation(char *salutation);
@@ -87,7 +87,7 @@ char* get_email(char *email);
 char* get_tel(char *tel);
 char* get_is_staff(int is_staff);
 
-// catalogue object functions
+// Catalogue object functions
 void add_item();
 void view_items();
 void delete_item();
