@@ -756,3 +756,98 @@ struct user fetch_user(int id) {
 }
 
 
+void set_logged_in_user(struct user u) {
+    LOGGED_IN_USER = u;
+}
+
+void login_user()
+{
+    char ch,pass[30],password[30];
+    int id,i;
+    system("cls");
+    printf("\n\tCounty Library Management System!\n");
+    printf("You must be logged in to continue. Press x to exit or any other key to continue. \n");
+    ch = getch();
+    system("cls");
+    if(ch == 'x') close();
+    if(get_no_of_users() == 0 ) {
+     if(!create_first_user()) {
+        main();
+     }
+    }
+    while(1) {
+        printf("Log in to continue.\n");
+        printf("Membership ID: ");
+        scanf("%d",&id);
+        strcpy(pass,get_password(id));
+        if(!strcmp(pass,"")) {
+            printf("User with that Membership ID does not exist. \nPress x to exit or any other key to continue. \n ");
+            ch = getch();
+            system("cls");
+            if(ch == 'x') login_user();
+            else continue;
+        }
+        while(1) {
+            i = 0;
+            system("cls");
+            printf("Enter password: ");
+            strcpy(password,read_password());
+            if(strcmp(pass,password)) {
+                printf("\nIncorrect Password!\n");
+                printf("Enter c to try again or x to exit. \n");
+                ch = getch();
+                system("cls");
+                if(ch == 'x') login_user();
+            }
+            else {
+                IS_LOGGED_IN = 1;
+                set_logged_in_user(fetch_user(id));
+                printf("\nLogin was Successful!\n");
+                printf("Press any key to continue");
+                getch();
+                return;
+            }
+        }
+
+    }
+
+}
+
+int is_password_set() {
+    return strcmp(LOGGED_IN_USER.password,get_initial_password(LOGGED_IN_USER.name));
+}
+
+void change_password() {
+    char old_pass[30],new_pass[30];
+    printf("Enter old password: ");
+    strcpy(old_pass,read_password());
+    if(strcmp(old_pass,LOGGED_IN_USER.password) == 0) {
+        strcpy(new_pass,set_password());
+        strcpy(LOGGED_IN_USER.password,new_pass);
+        update_user(LOGGED_IN_USER);
+    }
+    else {
+        printf("\nIncorrect Old Password\n");
+    }
+
+}
+
+void logout() {
+    IS_LOGGED_IN = 0;
+    printf("\n You have been logged out! \n");
+}
+
+char* read_password()
+{
+    char password[30],ch;
+    int i = 0;
+    while(1) {
+            ch = getch();
+            if(ch == '\r') break;
+            if(!isgraph(ch) || iscntrl(ch)) continue;
+            password[i] = ch;
+            printf("*");
+            i++;
+    }
+    return password;
+}
